@@ -1,0 +1,32 @@
+# install or upgrade Amazon CLI
+sudo yum install python-pip
+sudo pip install --upgrade awscli
+
+# check if properly installed
+aws --version
+
+# configuring AWS credentials
+vi ~/.aws/config
+
+# list available regions
+aws ec2 describe-regions
+
+# create an emr bucket to put the output
+aws --profile emruser s3 mb s3://wyy-emruser-emrtest
+
+# create a new EMR cluster using Hadoop Streaming via AWS CLI
+aws --profile emruser emr create-cluster --ami-version 3.3.0 --auto-terminate --name "EMR Streaming WordCount Test" \
+ --log-uri s3://wyy-emruser-emrtest/logs \
+--steps Name=WordCount,Jar=/home/hadoop/contrib/streaming/hadoop-streaming.jar,ActionOnFailure=TERMINATE_CLUSTER,MainClass=string1,Type=streaming,Args=[--files,s3://elasticmapreduce/samples/wordcount/wordSplitter.py,-mapper,wordSplitter.py,-reducer,aggregate,-input,s3://elasticmapreduce/samples/wordcount/input,-output,s3://wyy-emruser-emrtest/streaming/output/2014-11-11] \
+--instance-groups InstanceGroupType=MASTER,InstanceType=m1.medium,InstanceCount=1 InstanceGroupType=CORE,InstanceType=m1.medium,InstanceCount=2
+
+# create a new EMR cluster using Hive via AWS CLI
+aws --profile emruser emr create-cluster --ami-version 3.3.0 --auto-terminate --application Name=Hive --name="EMR Hive Default Test" --log-uri s3://wyy-emruser-emrtest/logs \
+--instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType=m1.medium InstanceGroupType=CORE,InstanceCount=2,InstanceType=m1.medium \
+--steps Type=Hive,Name="EMR Hive Test",ActionOnFailure=TERMINATE_CLUSTER,Args=[-f,s3://elasticmapreduce/samples/hive-ads/libs/model-build.q,-d,INPUT=s3://elasticmapreduce/samples/hive-ads/tables,-d,OUTPUT=s3://wyy-emruser-emrtest/hive/output/2014-04-18/11-07-32,-d,LIBS=s3://elasticmapreduce/samples/hive-ads/libs] 
+
+# create a new EMR cluster using Hive via AWS CLI (customized to group by feature)
+aws --profile emruser s3 cp ./emr/grouptest.q s3://wyy-emruser-emrtest/scripts/
+aws --profile emruser emr create-cluster --ami-version 3.3.0 --auto-terminate  --application Name=Hive --name="EMR Hive Grouping Test" --log-uri s3://wyy-emruser-emrtest/logs \
+--instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType=m1.medium InstanceGroupType=CORE,InstanceCount=2,InstanceType=m1.medium \
+--steps Type=Hive,Name="EMR Hive Grouping Test",ActionOnFailure=TERMINATE_CLUSTER,Args=[-f,s3://wyy-emruser-emrtest/scripts/grouptest.q,-d,INPUT=s3://elasticmapreduce/samples/hive-ads/tables,-d,OUTPUT=s3://wyy-emruser-emrtest/hive/output/2014-04-18/11-07-32,-d,LIBS=s3://wyy-emruser-emrtest/scripts] 
