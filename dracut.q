@@ -1,6 +1,12 @@
 -- Hive Script for Processing dracut.log
 -- wyu@ateneo.edu
 
+-- Make sure you have the dependencies ready for this and run it afterwards.
+-- 1. Install hive. You can do this by typing 'yum install hive hive-server2'
+-- 2. Create the directory for the raw dracut logs needed in this example as the appropriate user. In this case, it is the wyy user. 'hadoop fs -mkdir /user/wyy/dracut'
+-- 3. Upload the raw dracut.log file to the proper location as the appropriate user. In this case, it is the wyy user. 'hadoop fs -put dracut.log /user/wyy/dracut/'
+-- 4. Run this script by typing 'hive -f dracut.q'
+
 DROP TABLE IF EXISTS dracut_logs;
 CREATE EXTERNAL TABLE IF NOT EXISTS dracut_logs (
   weekday STRING,
